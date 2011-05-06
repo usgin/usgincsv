@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
-import datetime, os, csv, time, djangotasks
+import datetime, os, csv, djangotasks, csvtometadata
 
 ROOT_DATA_LOCATION = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 DATA_STORE = FileSystemStorage(location=ROOT_DATA_LOCATION, base_url='/csv-uploads/')
@@ -32,11 +32,11 @@ class CsvUpload(models.Model):
             raise ValidationError('Uploaded file is not a valid CSV file.')
         
     def run_conversion(self):
-        folder_path = '/Users/ryan/Documents/git/usgincsv/data/tasks'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-        f = open(os.path.join(folder_path, 'finished.txt'), 'w')
-        f.write('Ran the task.')
-        f.close()
+        csv_file_path = self.csv_file.file.name
+        csv_folder_path = os.path.dirname(csv_file_path)
+        print csv_file_path
+        print csv_folder_path
+        csvtometadata.transformcsv(csv_file_path, csv_folder_path)
+        pass
         
 djangotasks.register_task(CsvUpload.run_conversion, "Convert CSV File to XML Metadata.")
