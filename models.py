@@ -1,14 +1,16 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
-import datetime, os, csv, djangotasks, csvtometadata
+import datetime, os, csv, djangotasks
+from conversion import transformcsv, send_results, cleanup
 
 ROOT_DATA_LOCATION = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 DATA_STORE = FileSystemStorage(location=ROOT_DATA_LOCATION, base_url='/csv-uploads/')
 
 def data_location(instance, filename):
     gen_user = instance.return_email.split('@')[0]
-    return os.path.join(gen_user, filename)
+    file_start = filename.split('.')[0]
+    return os.path.join(gen_user, file_start, filename)
 
 class CsvUpload(models.Model):
     name = models.CharField(max_length=50)
@@ -32,11 +34,15 @@ class CsvUpload(models.Model):
             raise ValidationError('Uploaded file is not a valid CSV file.')
         
     def run_conversion(self):
-        csv_file_path = self.csv_file.file.name
-        csv_folder_path = os.path.dirname(csv_file_path)
-        print csv_file_path
-        print csv_folder_path
-        csvtometadata.transformcsv(csv_file_path, csv_folder_path)
+        # Run the CSV > Metadata transformation
+        transformcsv(self)
+        
+        # Ship the results
+        send_results(self)
+        
+        # Clean up
+        cleanup(self)
+        
         pass
         
 djangotasks.register_task(CsvUpload.run_conversion, "Convert CSV File to XML Metadata.")
