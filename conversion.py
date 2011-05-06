@@ -40,7 +40,7 @@ def send_results(csvupload):
                           from_email='ryan.clark@azgs.az.gov',
                           to=[csvupload.return_email],)
     report.attach_file(archive_path)
-    #report.send()
+    report.send()
     
 def cleanup(csvupload):
     folder, name = os.path.split(get_folder_path(csvupload))
