@@ -4,8 +4,15 @@ from django.core.mail import EmailMessage
 def get_folder_path(csvupload):
     return os.path.dirname(csvupload.csv_file.file.name)
 
+def output_report(report, csvupload):
+    report_path = os.path.join(get_folder_path(csvupload), 'report.txt')
+    f = open(report_path, 'w')
+    f.write('\r\n'.join(report))
+    f.close()
+    
 def transformcsv(csvupload):
-    csvtometadata.transformcsv(csvupload.csv_file.file.name, get_folder_path(csvupload))
+    report = csvtometadata.transformcsv(csvupload.csv_file.file.name, get_folder_path(csvupload))
+    output_report(report, csvupload)
 
 def recursive_compress(path, archive, root):
     for thing in os.listdir(path):
@@ -33,7 +40,7 @@ def send_results(csvupload):
                           from_email='ryan.clark@azgs.az.gov',
                           to=[csvupload.return_email],)
     report.attach_file(archive_path)
-    report.send()
+    #report.send()
     
 def cleanup(csvupload):
     folder, name = os.path.split(get_folder_path(csvupload))

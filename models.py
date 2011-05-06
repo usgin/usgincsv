@@ -41,7 +41,7 @@ class CsvUpload(models.Model):
         send_results(self)
         
         # Clean up
-        cleanup(self)
+        #cleanup(self)
         
         pass
         
